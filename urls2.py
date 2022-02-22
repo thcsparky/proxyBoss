@@ -41,7 +41,7 @@ def getIps(page):
 def main():
     
     ports = []
-    print("Press key at any point to stop searching and save list!\n")
+    print("Press ctrl + c at any point to stop searching and save list!\n")
     portGet = input('Enter ports, separated by "," unless you only wanna do one port..\n')
     if portGet.find(',') == -1:
         ports.append(str(portGet))
@@ -58,31 +58,60 @@ def main():
     links = []
     proxies = []
     while curpos <= 20:
-        listlinks = getlinks(a, curpos)
-        if type(listlinks) is list:
-            for x in listlinks:
-                if x not in links:
-                    #add to total links
-                    links.append(x)
-                    #grab proxies from page
-                    print('grabbing proxies from page: ' + x)
-                    proxiesSubList = getIps(x)
-                    if type(proxiesSubList) == str:
-                        print(proxiesSubList)
-                    elif type(proxiesSubList) == list:
-                        for proxy in proxiesSubList:
-                            if proxy not in proxies:
-                                #check proxy via ports::
-                                for proxyport in ports:
-                                    checker = checkProxy(proxy, proxyport)
-                                    if checker == 'Not Ok':
-                                        print('Bad proxy: ' + proxy + ':' + proxyport + ' ...Ignoring')
-                                    elif checker == 'Ok':
-                                        print('Good proxy found! :): ' + proxy + ':' + proxyport)
-                                        proxies.append(proxy + ':' + proxyport)
-        else:
-            print(listlinks)
-        curpos += 10
+        try:
+            listlinks = getlinks(a, curpos)
+            if type(listlinks) is list:
+                for x in listlinks:
+                    if x not in links:
+                        #add to total links
+                        links.append(x)
+                        #grab proxies from page
+                        print('grabbing proxies from page: ' + x)
+                        proxiesSubList = getIps(x)
+                        if type(proxiesSubList) == str:
+                            print(proxiesSubList)
+                        elif type(proxiesSubList) == list:
+                            for proxy in proxiesSubList:
+                                if proxy not in proxies:
+                                    #check proxy via ports::
+                                    for proxyport in ports:
+                                        checker = checkProxy(proxy, proxyport)
+                                        if checker == 'Not Ok':
+                                            print('Bad proxy: ' + proxy + ':' + proxyport + ' ...Ignoring')
+                                        elif checker == 'Ok':
+                                            print('Good proxy found! :): ' + proxy + ':' + proxyport)
+                                            proxies.append(proxy + ':' + proxyport)
+            else:
+                print(listlinks)
+            curpos += 10
+        except KeyboardInterrupt:
+            print('Program halted!')
+            if len(proxies) <= 0:
+                print('No proxies found, nothing to save. Exiting. \n')
+                quit()
+            else:
+                print("All of these proxies so far have been found!:\n")
+                for x in proxies:
+                    print(x)
+            
+            print('What do you want to do? you can: \nsave\nquit')
+            keyOption = input('...\n').rstrip()
+            if keyOption != 'save':
+                print('okay, quitting!')
+                quit
+            else:
+                filename = input("Where to save to?\n" + os.getcwd() + '/').rstrip()
+                if len(filename) > 0:
+                    proxyStr = ''
+                    for x in proxies:
+                        proxyStr += x
+                    fileout = open(os.getcwd() + '/' + filename, 'w')
+                    fileout.write(proxyStr)
+                    print('Saved to: ' + os.getcwd() + '/' + filename)
+                    print('Quitting. Have a nice day!')
+                    quit()
+
+
     print("All of these proxies found! : ")
     for x in proxies:
         print(x)
@@ -99,6 +128,7 @@ def main():
             for x in proxies:
                 proxystring += x + '\n'
             proxyOut = open(os.getcwd() + '/' + filename, 'w')
+            print('Writing string: \n' + proxystring)
             proxyOut.write(proxystring)
             proxyOut.close()
             print('Saved list to!: ' + os.getcwd() + '/' + filename)
